@@ -1,0 +1,1 @@
+{"sanket.patil21@vit.edu": {"fname": "Sanket", "lname": "Patil"}, "om.gujar@gmail.com": {"fname": "Om", "lname": "Gujar"}, "rahul.patil@gmail.com": {"fname": "Rahul", "lname": "Patil"}, "abhishek.pote211@vit.edu": {"fname": "Abhishek", "lname": "Pote"}, "siddhesh.patil21@vit.edu": {"fname": "Siddhesh", "lname": "Patil"}}

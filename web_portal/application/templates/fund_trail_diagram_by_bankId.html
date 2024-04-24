@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+    <script src="https://unpkg.com/gojs@2.3.13/release/go.js"></script>
+
+    <div id="allSampleContent" class="p-4 w-full">
+        <link href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700" rel="stylesheet" type="text/css">
+        <script id="code">
+            function init() {
+
+                // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
+                // For details, see https://gojs.net/latest/intro/buildingObjects.html
+                const $ = go.GraphObject.make;  // for conciseness in defining templates
+
+                myDiagram =
+                    new go.Diagram("myDiagramDiv",  // must be the ID or reference to div
+                        {
+                            "toolManager.hoverDelay": 100,  // 100 milliseconds instead of the default 850
+                            allowCopy: false,
+                            layout:  // create a TreeLayout for the family tree
+                                $(go.TreeLayout,
+                                    { angle: 90, nodeSpacing: 10, layerSpacing: 40, layerStyle: go.TreeLayout.LayerUniform })
+                        });
+
+                var bluegrad = '#FFA13F '; //orange
+                var pinkgrad = '#FF5C40 '; // red
+
+                // Set up a Part as a legend, and place it directly on the diagram
+                myDiagram.add(
+                    $(go.Part, "Table",
+                        { position: new go.Point(500, 0), selectable: true },
+                        $(go.TextBlock, "Key",
+                            { row: 0, font: "700 14px Droid Serif, sans-serif" }),  // end row 0
+                        $(go.Panel, "Horizontal",
+                            { row: 1, alignment: go.Spot.Left },
+                            $(go.Shape, "Rectangle",
+                                { desiredSize: new go.Size(30, 30), fill: bluegrad, margin: 5 }),
+                            $(go.TextBlock, "Suspicious Accounts",
+                                { font: "700 13px Droid Serif, sans-serif" })
+                        ),  // end row 1
+                        $(go.Panel, "Horizontal",
+                            { row: 2, alignment: go.Spot.Left },
+                            $(go.Shape, "Rectangle",
+                                { desiredSize: new go.Size(30, 30), fill: pinkgrad, margin: 5 }),
+                            $(go.TextBlock, "Fradulent Accounts",
+                                { font: "700 13px Droid Serif, sans-serif" })
+                        )  // end row 2
+                    ));
+
+                // get tooltip text from the object's data
+                function tooltipTextConverter(person) {
+                    var str = "";
+                    str += "Hoder's Name: " + person.holderName;
+                    if (person.address !== undefined) str += "\nAddress: " + person.address;
+                    if (person.transId !== undefined) str += "\nTransaction ID: " + person.transId;
+                    if (person.amt !== undefined) str += "\nTransfered Amount: " + person.amt;
+
+                    return str;
+                }
+
+                // define tooltips for nodes
+                var tooltiptemplate =
+                    $("ToolTip",
+                        { "Border.fill": "whitesmoke", "Border.stroke": "black" },
+                        $(go.TextBlock,
+                            {
+                                font: "bold 8pt Helvetica, bold Arial, sans-serif",
+                                wrap: go.TextBlock.WrapFit,
+                                margin: 5
+                            },
+                            new go.Binding("text", "", tooltipTextConverter))
+                    );
+
+                // define Converters to be used for Bindings
+                function genderBrushConverter(gender) {
+                    if (gender === "S") return bluegrad;
+                    if (gender === "F") return pinkgrad;
+                    return "orange";
+                }
+
+                // replace the default Node template in the nodeTemplateMap
+                myDiagram.nodeTemplate =
+                    $(go.Node, "Auto",
+                        { deletable: false, toolTip: tooltiptemplate },
+                        new go.Binding("text", "name"),
+                        $(go.Shape, "RoundedRectangle",
+                            {
+                                fill: "lightgray",
+                                stroke: null, strokeWidth: 0,
+                                stretch: go.GraphObject.Fill,
+                                alignment: go.Spot.Center
+                            },
+                            new go.Binding("fill", "gender", genderBrushConverter)),
+                        $(go.TextBlock,
+                            {
+                                font: "700 18px Droid Serif, sans-serif",
+                                textAlign: "center",
+                                margin: 10, maxSize: new go.Size(80, NaN)
+                            },
+                            new go.Binding("text", "name"))
+                    );
+
+                // define the Link template
+                myDiagram.linkTemplate =
+                    $(go.Link,  // the whole link panel
+                        { routing: go.Link.Orthogonal, corner: 5, selectable: false },
+                        $(go.Shape, { strokeWidth: 3, stroke: '#424242' }));  // the gray link shape
+
+                // here's the family data
+                var nodeDataArray = [
+                    { key: 0, name: "1347", gender: "F", holderName: "Customer 1347", address: "Address 1347" },
+                    { key: 1, parent: 0, name: "2612", gender: "F", holderName: "Customer 2612", address: "Address 2612", transId: "9", amt: "75.6599445" },
+                    { key: 2, parent: 1, name: "3057", gender: "F", holderName: "Customer 3057", address: "Address 3057", transId: "1136", amt: "69.96740104" },
+                    { key: 3, parent: 1, name: "3133", gender: "F", holderName: "Customer 3133", address: "Address 3133", transId: "1092", amt: "19.26350909" },
+                    { key: 4, parent: 1, name: "3156", gender: "F", holderName: "Customer 3156", address: "Address 3156", transId: "1195", amt: "52.39837608" },
+                    { key: 5, parent: 2, name: "3001", gender: "S", holderName: "Customer 3001", address: "Address 3001", transId: "1131", amt: "42.71077234" },
+                    { key: 6, parent: 2, name: "3183", gender: "S", holderName: "Customer 3183", address: "Address 3183", transId: "1141", amt: "14.49572183" },
+                    { key: 7, parent: 2, name: "3005", gender: "F", holderName: "Customer 3005", address: "Address 3005", transId: "1149", amt: "45.51447596" },
+
+                    { key: 8, parent: 2, name: "3103", gender: "S", holderName: "Customer 3103", address: "Address 3103", transId: "1156", amt: "50.98005384" },
+                    { key: 9, parent: 3, name: "4574", gender: "F", holderName: "Customer 4574", address: "Address 4574", transId: "2582", amt: "46.83127413" },
+                    { key: 10, parent: 9, name: "4525", gender: "S", holderName: "Customer 4525", address: "Address 4525", transId: "2578", amt: "62.35963981" },
+
+                    { key: 11, parent: 4, name: "4550", gender: "S", holderName: "Customer 4550", address: "Address 4550", transId: "2496", amt: "89.41926396" },
+                    { key: 12, parent: 4, name: "4538", gender: "S", holderName: "Customer 4538", address: "Address 4538", transId: "2557", amt: "13.37212989" },
+                    { key: 13, parent: 4, name: "4439", gender: "F", holderName: "Customer 4439", address: "Address 4439", transId: "2521", amt: "90.05712793" },
+                    { key: 14, parent: 4, name: "4570", gender: "S", holderName: "Customer 4570", address: "Address 4570", transId: "2523", amt: "33.60529178" },
+                    { key: 15, parent: 4, name: "4577", gender: "S", holderName: "Customer 4577", address: "Address 4577", transId: "2552", amt: "15.63293505" },
+                    { key: 16, parent: 4, name: "4504", gender: "S", holderName: "Customer 4504", address: "Address 4504", transId: "2567", amt: "23.85773925" },
+                    { key: 17, parent: 4, name: "4403", gender: "S", holderName: "Customer 4403", address: "Address 4403", transId: "2573", amt: "95.71657706" },
+
+                    { key: 18, parent: 7, name: "4465", gender: "S", holderName: "Customer 4465", address: "Address 4465", transId: "2445", amt: "94.2602036" },
+                    { key: 19, parent: 7, name: "4498", gender: "S", holderName: "Customer 4498", address: "Address 4498", transId: "2505", amt: "91.37082641" },
+                    { key: 20, parent: 7, name: "4490", gender: "S", holderName: "Customer 4490", address: "Address 4490", transId: "2558", amt: "94.26191821" },
+
+                    { key: 21, parent: 13, name: "4502", gender: "F", holderName: "Customer 4502", address: "Address 4502", transId: "2478", amt: "57.67371031" },
+
+
+
+
+
+
+
+
+
+
+
+
+
+                ];
+
+                // create the model for the family tree
+                myDiagram.model = new go.TreeModel(nodeDataArray);
+
+                document.getElementById('zoomToFit').addEventListener('click', () => myDiagram.commandHandler.zoomToFit());
+
+                document.getElementById('centerRoot').addEventListener('click', () => {
+                    myDiagram.scale = 1;
+                    myDiagram.scrollToRect(myDiagram.findNodeForKey(0).actualBounds);
+                });
+
+            }
+            window.addEventListener('DOMContentLoaded', init);
+        </script>
+
+        <div id="sample">
+            <div id="myDiagramDiv"
+                style="background-color: rgb(198, 249, 255); border: 1px solid black; width: 100%; height: 100vh; position: relative; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);">
+                <canvas tabindex="0" width="1317" height="685"
+                    style="position: absolute; top: 0px; left: 0px; z-index: 2; user-select: none; touch-action: none; width: 100%; height: 548px;"></canvas>
+                <div style="position: absolute; overflow: auto; width: 1054px; height: 548px; z-index: 1;">
+                    <div style="position: absolute; width: 1px; height: 1px;"></div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</body>
+
+</html>

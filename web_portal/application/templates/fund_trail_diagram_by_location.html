@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Geographical Visualization</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+            /* Set the height to 100% of the viewport height */
+            width: 100%;
+            /* Set the width to 100% */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          const geodata = {{ geodata | tojson }};
+
+          // Initialize Leaflet map
+          const map = L.map('map').setView([0, 0], 2); // Default view centered at 0,0 with zoom level 2
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 18,
+          }).addTo(map);
+
+          // Create markers and popups for each location
+          const markers = [];
+          const polylines = [];
+
+          geodata.forEach(item => {
+              const marker = L.marker([item.Latitude_To, item.Longitude_To]).addTo(map);
+              marker.bindPopup(`<b>Transaction Amount:</b> ${item.TransactionAmount}<br><b>Timestamp:</b> ${item.Timestamp}<br><b>Customer ID:</b> ${item.CustomerID}<br><b>To:</b> ${item.MerchantID}<br><b>Address:</b> ${item.Address}`);
+              markers.push(marker);
+
+              // Add a label to the marker with the Transaction ID
+              marker.bindTooltip(`Transaction ID: ${item.TransactionID}`, {permanent: true, direction: 'top'}).openTooltip();
+          });
+
+          // Connect markers with lines to showcase the flow of transactions
+          for (let i = 0; i < geodata.length - 1; i++) {
+              const points = [
+                  [geodata[i].Latitude_To, geodata[i].Longitude_To],
+                  [geodata[i].Latitude_From, geodata[i].Longitude_From]
+              ];
+              const polyline = L.polyline(points, { color: 'blue', opacity: 0.5 }).addTo(map);
+              polylines.push(polyline);
+          }
+
+          // Add click event to each marker
+          markers.forEach((marker, index) => {
+              marker.on('click', function() {
+                  // Hide all polylines
+                  polylines.forEach(polyline => {
+                      map.removeLayer(polyline);
+                  });
+
+                  // Show the polyline connected to the clicked marker
+                  if (index < polylines.length) {
+                      polylines[index].addTo(map);
+                  }
+              });
+          });
+      });
+    </script>
+</body>
+
+</html>
